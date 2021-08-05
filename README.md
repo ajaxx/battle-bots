@@ -31,6 +31,25 @@ The application comes bundled with a gradle build process.
 
 * `gradle`
 
+## Concepts
+
+This application uses a lot of design patterns.  For example:
+
+*Factory pattern* - this is used to create many of the objects in this system.  The factory
+pattern is fairy trivial.  It separates construction an object from the users of that object.
+In this way, the type of mechanics of instance creation can be customized while preserving
+the expected data type.
+
+*Singleton pattern* - the singleton ensures that a single object exists for the entirety of
+a given scope.  In this case, our scope is usually the entire process.  For example, the
+TimerSingleton ensures that only a single timer is provided for the application.  This was
+implemented in this way for visibility, but in practical terms it could be done with spring
+by using the dependency injection with annotations.
+
+*PubSub pattern* - we make use of a message bus internally.  The message bus allows messages
+to be routed to clients.  In this case, we send initial messages and updates to the game
+via the message routing mechanisms.
+
 ## Testing
 
 All components should be passed through a test suite based on junit.
