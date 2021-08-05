@@ -1,11 +1,11 @@
 name: Battlebots Workflow
 
-on: [push]
+on: [ push ]
 
 jobs:
   build:
     name: CI/CD
       runs-on: ubuntu-latest
-      steps:
-        - name: Checkout repository code
-          uses: actions/checkout@v2
+        steps:
+            - name: Checkout repository code
+              uses: actions/checkout@v2
