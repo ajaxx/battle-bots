@@ -30,4 +30,13 @@ public class TimerSingleton {
             singletonLock.unlock();
         }
     }
+
+    public static void setInstance(final Timer instance) {
+        singletonLock.lock();
+        try {
+            timer = instance;
+        } finally {
+            singletonLock.unlock();
+        }
+    }
 }
