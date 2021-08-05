@@ -11,6 +11,10 @@ public class DefaultSimulatorFactory implements SimulatorFactory {
         this.arenaFactory = arenaFactory;
     }
 
+    public ArenaFactory getArenaFactory() {
+        return arenaFactory;
+    }
+
     /**
      * Creates a new simulation.
      * @return a new simulation.

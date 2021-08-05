@@ -31,6 +31,14 @@ public class DefaultArenaFactory implements ArenaFactory {
         this.arenaHeight = arenaHeight;
     }
 
+    public int getArenaWidth() {
+        return arenaWidth;
+    }
+
+    public int getArenaHeight() {
+        return arenaHeight;
+    }
+
     /**
      * Creates a new arena.
      * @return the arena

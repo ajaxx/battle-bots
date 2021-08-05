@@ -1,13 +1,9 @@
 package org.battlebots.objects;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.battlebots.util.BodySerializer;
-import org.battlebots.util.ShapeDeserializer;
-import org.battlebots.util.ShapeSerializer;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.geometry.Convex;
-import org.dyn4j.geometry.Shape;
 
 import java.util.UUID;
 

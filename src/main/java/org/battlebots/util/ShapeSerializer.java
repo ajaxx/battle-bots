@@ -12,6 +12,8 @@ public class ShapeSerializer extends JsonSerializer<Shape> {
     public void serialize(final Shape value,
                           final JsonGenerator gen,
                           final SerializerProvider serializers) throws IOException {
+        final Vector2Serializer vector2Serializer = new Vector2Serializer();
+
         gen.writeStartObject();
 
         if (value instanceof Circle) {
@@ -28,20 +30,11 @@ public class ShapeSerializer extends JsonSerializer<Shape> {
             gen.writeStringField("points", verticesToPoints(polygon.getVertices()));
             gen.writeArrayFieldStart("vertices");
             for (Vector2 vertex : polygon.getVertices()) {
-                serialize(vertex, gen, serializers);
+                vector2Serializer.serialize(vertex, gen, serializers);
             }
             gen.writeEndArray();
         }
 
-        gen.writeEndObject();
-    }
-
-    public void serialize(final Vector2 value,
-                          final JsonGenerator gen,
-                          final SerializerProvider serializerProvider) throws IOException {
-        gen.writeStartObject();
-        gen.writeObjectField("x", value.x);
-        gen.writeObjectField("y", value.y);
         gen.writeEndObject();
     }
 
