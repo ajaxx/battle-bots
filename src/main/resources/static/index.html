@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.js"></script>
+    <script type="application/javascript">
+        let stompClient = null;
+        let atomsMap = {};
+
+        function setConnected(connected) {
+            document.getElementById('connect').disabled = connected;
+            document.getElementById('disconnect').disabled = !connected;
+        }
+
+        function createShape(shape) {
+            if (shape.type == "circle") {
+                let element = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                element.setAttribute("cx", shape.x);
+                element.setAttribute("cy", shape.y);
+                element.setAttribute("r", shape.radius);
+                return element;
+            } else if (shape.type == "polygon") {
+                let element = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+                element.setAttribute("points", shape.points);
+                return element;
+            }
+        }
+
+        function createBody(body) {
+            let element = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            let tx = body.transform.x;
+            let ty = body.transform.y;
+            let transform = "translate(" + tx + "," + ty + ")";
+
+            element.setAttribute("transform", transform);
+
+            body.fixtures.forEach(fixture => {
+                element.appendChild(createShape(fixture));
+            });
+            return element;
+        }
+
+        function onInitialStateMessage(initialStateMessage) {
+            const width = initialStateMessage.width;
+            const height = initialStateMessage.height;
+            const atoms = initialStateMessage.atoms;
+
+            const border = document.getElementById("border");
+            border.setAttribute('width', width)
+            border.setAttribute('height', height)
+
+            const group = document.getElementById("atoms");
+            while (group.lastChild) {
+                group.removeChild(group.lastChild);
+            }
+
+            for (let ii = 0; ii < atoms.length; ii++) {
+                let atom = atoms[ii];
+                let body = atom.body;
+                let element = createBody(body);
+                element.setAttribute("id", atom.id);
+                element.setAttribute("class", "atom " + atom.type);
+                group.appendChild(element)
+                atomsMap[atom.id] = element;
+            }
+        }
+
+        function onUpdateAtomState(atomStateUpdate) {
+        }
+
+        function onUpdateStateMessage(updateStateMessage) {
+            updateStateMessage.atoms.forEach(updateAtomState);
+        }
+
+        function onArenaMessage(arenaUpdateMessage) {
+            console.log('on arena update');
+            console.log(arenaUpdateMessage);
+            const initialStateMessage = JSON.parse(arenaUpdateMessage.body);
+            onInitialStateMessage(initialStateMessage)
+        }
+
+        function onRequestStartStop() {
+            console.log('start-stop');
+            stompClient.send("/app/start-stop", {}, JSON.stringify({}));
+        }
+
+        function connect() {
+            const socket = new SockJS('/arena');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, function(frame) {
+                setConnected(true);
+                console.log('Connected: ' + frame);
+                // ensure that we subscribe to updates on the arena
+                stompClient.subscribe('/app/topic/arena', onArenaMessage);
+            });
+        }
+
+        function disconnect() {
+            if(stompClient != null) {
+                stompClient.disconnect();
+            }
+            setConnected(false);
+            console.log("Disconnected");
+        }
+
+        function addVehicle() {
+            console.log('add-vehicle');
+            stompClient.send("/app/add", {}, JSON.stringify({}));
+        }
+
+        function handleArenaUpdate(data) {
+            let messageData = JSON.parse(data);
+        }
+    </script>
+</head>
+    <body>
+        <input id="connect" type="button" value="Connect" onclick="connect()">
+        <input id="disconnect" type="button" value="Disconnect" onclick="disconnect()">
+        <div>
+            <ul id="toolbar">
+                <li><a href="#" onclick="onRequestStartStop()">Start/Stop</a></li>
+                <li><a href="#" onclick="onRequestAddVehicle()">Add Vehicle</a></li>
+                <li><a href="#" onclick="onRequestAddMine()">Add Mine</a></li>
+                <li><a href="#" onclick="onRequestAddWall()">Add Wall</a></li>
+            </ul>
+        </div>
+        <div>
+            <svg id="canvas" width="1000" height="1000">
+                <rect id="border" stroke="black" fill="white" x="0" y="0"  width="1000" height="1000" />
+                <g id="atoms"></g>
+            </svg>
+        </div>
+    </body>
+</html>

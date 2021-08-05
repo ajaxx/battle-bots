@@ -1,0 +1,41 @@
+#border {
+    stroke: black;
+    stroke-width: 1px;
+    stroke-opacity: 1.0;
+    fill: white;
+    fill-opacity: 0.5;
+}
+
+#toolbar {
+    list-style: none;
+    border: 1px solid black;
+    padding: 1rem;
+}
+
+#atoms .\.Mine {
+    fill-opacity: 0.4;
+    fill: red;
+    stroke-width: 1;
+    stroke: black;
+}
+
+#atoms .\.Rocket {
+    fill-opacity: 0.4;
+    fill: red;
+    stroke-width: 1;
+    stroke: black;
+}
+
+#atoms .\.Wall {
+    fill-opacity: 0.4;
+    fill: gray;
+    stroke-width: 1;
+    stroke: black;
+}
+
+#atoms .\.Vehicle {
+    fill-opacity: 0.4;
+    fill: green;
+    stroke-width: 1;
+    stroke: black;
+}
