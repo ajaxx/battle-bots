@@ -1,12 +1,15 @@
 package org.battlebots.objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.battlebots.util.BodySerializer;
+import org.battlebots.events.MovementEvent;
+import org.battlebots.listeners.MovementEventListener;
 import org.battlebots.util.Vector2Serializer;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.geometry.Convex;
-import org.dyn4j.geometry.Shape;
 import org.dyn4j.geometry.Vector2;
+
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Models the basic mechanics of any atom that is capable of moving through the arena.
@@ -14,6 +17,8 @@ import org.dyn4j.geometry.Vector2;
  * in a direction.
  */
 abstract public class MovingAtom extends BasicAtom {
+    @JsonIgnore
+    private final CopyOnWriteArrayList<MovementEventListener> movementEventListeners = new CopyOnWriteArrayList<>();
     /** Velocity */
     @JsonSerialize(using = Vector2Serializer.class)
     private Vector2 velocity;
@@ -48,6 +53,16 @@ abstract public class MovingAtom extends BasicAtom {
     }
 
     /**
+     * Sets the velocity.
+     * @param velocity
+     * @return
+     */
+    public MovingAtom setVelocity(final Vector2 velocity) {
+        this.velocity = velocity;
+        return this;
+    }
+
+    /**
      * Returns the vector-based orientation of the atom.
      * @return the vector-based orientation of the atom.
      */
@@ -57,9 +72,40 @@ abstract public class MovingAtom extends BasicAtom {
     }
 
     /**
+     * Sets the atom orientation.
+     * @param orientation
+     * @return
+     */
+    public MovingAtom setOrientation(final Vector2 orientation) {
+        this.orientation = orientation;
+        return this;
+    }
+
+    /**
      * Occurs when the simulation executes a single tick.
      */
     public void onSimulationTick() {
-        translate(velocity.x, velocity.y);
+        if (velocity.x != 0.0 || velocity.y != 0.0) {
+            translate(velocity.x, velocity.y);
+            MovementEvent movementEvent = new MovementEvent(this, getBody().getTransform().getTranslation());
+            movementEventListeners.forEach(listener -> listener.onMovementEvent(movementEvent));
+        }
+    }
+
+    /**
+     * Adds a movement listener.
+     * @param listener a movement listener.
+     */
+
+    public void addMovementListener(final MovementEventListener listener) {
+        movementEventListeners.add(listener);
+    }
+
+    /**
+     * Removes a movement listener.
+     * @param listener a movement listener.
+     */
+    public void removeMovementListener(final MovementEventListener listener) {
+        movementEventListeners.remove(listener);
     }
 }

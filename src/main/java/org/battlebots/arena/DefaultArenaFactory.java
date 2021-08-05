@@ -4,6 +4,7 @@ import org.battlebots.objects.Mine;
 import org.battlebots.objects.Rocket;
 import org.battlebots.objects.Vehicle;
 import org.battlebots.objects.Wall;
+import org.dyn4j.geometry.Vector2;
 import org.springframework.context.annotation.Bean;
 
 public class DefaultArenaFactory implements ArenaFactory {
@@ -50,7 +51,7 @@ public class DefaultArenaFactory implements ArenaFactory {
         arena.add(new Mine(40, 40));
         arena.add(new Mine(60, 60));
         arena.add(new Mine(80, 80));
-        arena.add(new Vehicle(400, 200));
+        arena.add(new Vehicle(400, 200).setVelocity(Vector2.create(1, 0)));
         arena.add(new Wall(100, 100, 80, 10));
         arena.add(new Rocket(200, 200));
         return arena;
