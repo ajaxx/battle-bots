@@ -78,27 +78,36 @@
             updateStateMessage.atoms.forEach(updateAtomState);
         }
 
-        function onArenaMessage(arenaUpdateMessage) {
-            console.log('on arena update');
-            console.log(arenaUpdateMessage);
+        function onMovement(message) {
+            const movementEvent = JSON.parse(message.body);
+            const translation = movementEvent.translation;
+            let tx = translation.x;
+            let ty = translation.y;
+            let transform = "translate(" + tx + "," + ty + ")";
+            const element = document.getElementById(movementEvent.atom)
+            element.setAttribute("transform", transform);
+        }
+
+        function onLoginResponse(arenaUpdateMessage) {
             const initialStateMessage = JSON.parse(arenaUpdateMessage.body);
             onInitialStateMessage(initialStateMessage)
         }
 
         function onRequestStartStop() {
-            console.log('start-stop');
             stompClient.send("/app/start-stop", {}, JSON.stringify({}));
         }
 
+        function onConnected() {
+            setConnected(true);
+            // ensure that we subscribe to updates on the arena
+            stompClient.subscribe('/app/arena.login', onLoginResponse);
+            stompClient.subscribe('/arena.movement', onMovement);
+        }
+
         function connect() {
-            const socket = new SockJS('/arena');
+            const socket = new SockJS('/ws');
             stompClient = Stomp.over(socket);
-            stompClient.connect({}, function(frame) {
-                setConnected(true);
-                console.log('Connected: ' + frame);
-                // ensure that we subscribe to updates on the arena
-                stompClient.subscribe('/app/topic/arena', onArenaMessage);
-            });
+            stompClient.connect({}, onConnected);
         }
 
         function disconnect() {

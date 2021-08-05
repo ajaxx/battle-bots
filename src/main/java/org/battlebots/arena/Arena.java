@@ -1,11 +1,15 @@
 package org.battlebots.arena;
 
 import org.battlebots.objects.Atom;
+import org.battlebots.listeners.MovementEventListener;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Arena {
+    private final CopyOnWriteArrayList<MovementEventListener> movementEventListeners = new CopyOnWriteArrayList<>();
+
     private final int width;
     private final int height;
     private final Set<Atom> atoms;
@@ -60,6 +64,8 @@ public class Arena {
      */
     public void add(final Atom atom) {
         atoms.add(atom);
+        atom.addMovementListener(movementEvent ->
+                movementEventListeners.forEach(listener -> listener.onMovementEvent(movementEvent)));
     }
 
     /**
@@ -69,5 +75,22 @@ public class Arena {
 
     public void remove(final Atom atom) {
         atoms.remove(atom);
+    }
+
+    /**
+     * Adds a movement listener.
+     * @param listener a movement listener.
+     */
+
+    public void addMovementListener(final MovementEventListener listener) {
+        movementEventListeners.add(listener);
+    }
+
+    /**
+     * Removes a movement listener.
+     * @param listener a movement listener.
+     */
+    public void removeMovementListener(final MovementEventListener listener) {
+        movementEventListeners.remove(listener);
     }
 }
