@@ -3,6 +3,7 @@ package org.battlebots.objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.battlebots.events.MovementEvent;
+import org.battlebots.geometry.Rotation;
 import org.battlebots.listeners.MovementEventListener;
 import org.battlebots.util.Vector2Serializer;
 import org.dyn4j.dynamics.Body;
@@ -22,9 +23,10 @@ abstract public class MovingAtom extends BasicAtom {
     /** Velocity */
     @JsonSerialize(using = Vector2Serializer.class)
     private Vector2 velocity;
-    /** Orientation */
-    @JsonSerialize(using = Vector2Serializer.class)
-    private Vector2 orientation;
+    /** Angle (in radians) */
+    private double angle;
+    /** Angular velocity (in radians) */
+    private double angularVelocity;
 
     /**
      * Constructor for a atom.
@@ -63,21 +65,44 @@ abstract public class MovingAtom extends BasicAtom {
     }
 
     /**
-     * Returns the vector-based orientation of the atom.
-     * @return the vector-based orientation of the atom.
+     * Returns the current angle.
+     * @return the current angle.
      */
-
-    public Vector2 getOrientation() {
-        return orientation;
+    public double getAngle() {
+        return angle;
     }
 
     /**
-     * Sets the atom orientation.
-     * @param orientation
-     * @return
+     * Sets the current angle.
+     * @param angle the new angle.
      */
-    public MovingAtom setOrientation(final Vector2 orientation) {
-        this.orientation = orientation;
+
+    public MovingAtom setAngle(double angle) {
+        this.angle = angle;
+        return this;
+    }
+
+    /**
+     * Returns the angular velocity.
+     * @return the angular velocity.
+     */
+
+    public double getAngularVelocity() {
+        return angularVelocity;
+    }
+
+    /**
+     * Sets the angular velocity.
+     * @param angularVelocity the angular velocity.
+     */
+    public MovingAtom setAngularVelocity(double angularVelocity) {
+        this.angularVelocity = angularVelocity;
+        return this;
+    }
+
+    public MovingAtom rotate(final double theta) {
+        super.rotate(theta);
+        angle = getBody().getTransform().getRotationAngle();
         return this;
     }
 
@@ -85,10 +110,26 @@ abstract public class MovingAtom extends BasicAtom {
      * Occurs when the simulation executes a single tick.
      */
     public void onSimulationTick() {
+        MovementEvent movementEvent = null;
+
+        if (angularVelocity != 0.0) {
+            rotate(angularVelocity);
+            Vector2 center = getBoundingBoxCenter();
+            movementEvent = new MovementEvent(this);
+            movementEvent.setRotation(new Rotation(getAngle(), center.x, center.y));
+        }
+
         if (velocity.x != 0.0 || velocity.y != 0.0) {
             translate(velocity.x, velocity.y);
-            MovementEvent movementEvent = new MovementEvent(this, getBody().getTransform().getTranslation());
-            movementEventListeners.forEach(listener -> listener.onMovementEvent(movementEvent));
+            if (movementEvent == null) {
+                movementEvent = new MovementEvent(this);
+            }
+            movementEvent.setTranslation(getBody().getTransform().getTranslation());
+        }
+
+        if (movementEvent != null) {
+            final MovementEvent finalizedMovementEvent = movementEvent;
+            movementEventListeners.forEach(listener -> listener.onMovementEvent(finalizedMovementEvent));
         }
     }
 

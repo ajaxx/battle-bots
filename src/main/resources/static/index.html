@@ -33,17 +33,33 @@
         }
 
         function createBody(body) {
-            let element = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            let tx = body.transform.x;
-            let ty = body.transform.y;
-            let transform = "translate(" + tx + "," + ty + ")";
+            let rootElement = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            let atomsElement = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            atomsElement.setAttribute("class", "rotation");
 
-            element.setAttribute("transform", transform);
+            let transform = "";
+
+            let rotation = body.rotation;
+            if (rotation) {
+                let ra = rotation.angle;
+                let rx = rotation.cx;
+                let ry = rotation.cy;
+                transform += "rotate(" + ra + "," + rx + "," + ry + ") ";
+            }
+
+            if (body.transform) {
+                let tx = body.transform.x;
+                let ty = body.transform.y;
+                rootElement.setAttribute("transform", "translate(" + tx + "," + ty + ") ");
+            }
 
             body.fixtures.forEach(fixture => {
-                element.appendChild(createShape(fixture));
+                atomsElement.appendChild(createShape(fixture));
             });
-            return element;
+
+            rootElement.appendChild(atomsElement);
+
+            return rootElement;
         }
 
         function onInitialStateMessage(initialStateMessage) {
@@ -80,10 +96,23 @@
 
         function onMovement(message) {
             const movementEvent = JSON.parse(message.body);
-            const translation = movementEvent.translation;
-            let tx = translation.x;
-            let ty = translation.y;
-            let transform = "translate(" + tx + "," + ty + ")";
+            let transform = "";
+
+            let rotation = movementEvent.rotation;
+            if (rotation) {
+                let ra = rotation.angle;
+                let rx = rotation.cx;
+                let ry = rotation.cy;
+                transform += "rotate(" + ra + "," + rx + "," + ry + ") ";
+            }
+
+            let translation = movementEvent.translation;
+            if (translation) {
+                let tx = translation.x;
+                let ty = translation.y;
+                transform += "translate(" + tx + "," + ty + ") ";
+            }
+
             const element = document.getElementById(movementEvent.atom)
             element.setAttribute("transform", transform);
         }
@@ -140,8 +169,8 @@
             </ul>
         </div>
         <div>
-            <svg id="canvas" width="1000" height="1000">
-                <rect id="border" stroke="black" fill="white" x="0" y="0"  width="1000" height="1000" />
+            <svg id="canvas" width="1000" height="500">
+                <rect id="border" stroke="black" fill="white" x="0" y="0"  width="1000" height="500" />
                 <g id="atoms"></g>
             </svg>
         </div>

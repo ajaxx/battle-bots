@@ -1,15 +1,12 @@
 package org.battlebots.arena;
 
-import org.battlebots.objects.Mine;
-import org.battlebots.objects.Rocket;
 import org.battlebots.objects.Vehicle;
 import org.battlebots.objects.Wall;
 import org.dyn4j.geometry.Vector2;
-import org.springframework.context.annotation.Bean;
 
 public class DefaultArenaFactory implements ArenaFactory {
     public static final int DEFAULT_ARENA_WIDTH = 1000;
-    public static final int DEFAULT_ARENA_HEIGHT = 1000;
+    public static final int DEFAULT_ARENA_HEIGHT = 500;
     private final int arenaWidth;
     private final int arenaHeight;
 
@@ -46,14 +43,18 @@ public class DefaultArenaFactory implements ArenaFactory {
      */
     @Override
     public Arena createArena() {
+        // the omega race
         Arena arena = new Arena(arenaWidth, arenaHeight);
-        arena.add(new Mine(20, 20));
-        arena.add(new Mine(40, 40));
-        arena.add(new Mine(60, 60));
-        arena.add(new Mine(80, 80));
-        arena.add(new Vehicle(400, 200).setVelocity(Vector2.create(1, 0)));
-        arena.add(new Wall(100, 100, 80, 10));
-        arena.add(new Rocket(200, 200));
+        arena.add(new Wall(150, 125, 700, 250));
+        arena.add(Vehicle
+                .createPlayerVehicle(850, 425)
+                .setVelocity(Vector2.create(1, 0))
+        );
+        arena.add(Vehicle
+                .createBotVehicle(50, 25)
+                .setVelocity(Vector2.create(1, 0))
+                .setAngularVelocity(0.2617994)
+        );
         return arena;
     }
 }
