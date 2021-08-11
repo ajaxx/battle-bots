@@ -47,13 +47,9 @@ public class DefaultArenaFactory implements ArenaFactory {
         Arena arena = new Arena(arenaWidth, arenaHeight);
         arena.add(new Wall(150, 125, 700, 250));
         arena.add(Vehicle
-                .createPlayerVehicle(850, 425)
-                .setVelocity(Vector2.create(1, 0))
-        );
-        arena.add(Vehicle
                 .createBotVehicle(50, 25)
                 .setVelocity(Vector2.create(1, 0))
-                .setAngularVelocity(0.2617994)
+                .setAngularVelocity(0.08726646)
         );
         return arena;
     }

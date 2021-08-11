@@ -2,6 +2,8 @@ package org.battlebots.objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.battlebots.commands.Command;
+import org.battlebots.commands.ThrustCommand;
 import org.battlebots.events.MovementEvent;
 import org.battlebots.geometry.Rotation;
 import org.battlebots.listeners.MovementEventListener;
@@ -10,6 +12,7 @@ import org.dyn4j.dynamics.Body;
 import org.dyn4j.geometry.Convex;
 import org.dyn4j.geometry.Vector2;
 
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -20,6 +23,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 abstract public class MovingAtom extends BasicAtom {
     @JsonIgnore
     private final CopyOnWriteArrayList<MovementEventListener> movementEventListeners = new CopyOnWriteArrayList<>();
+    @JsonIgnore
+    private final Queue<Command> commandQueue = new LinkedList<Command>();
+
     /** Velocity */
     @JsonSerialize(using = Vector2Serializer.class)
     private Vector2 velocity;
@@ -106,30 +112,58 @@ abstract public class MovingAtom extends BasicAtom {
         return this;
     }
 
+    private MovementEvent movementEvent;
+
+    private MovementEvent getOrCreateMovementEvent() {
+        if (movementEvent == null) {
+            movementEvent = new MovementEvent(this);
+        }
+        return movementEvent;
+    }
+
     /**
      * Occurs when the simulation executes a single tick.
      */
     public void onSimulationTick() {
-        MovementEvent movementEvent = null;
-
-        if (angularVelocity != 0.0) {
-            rotate(angularVelocity);
-            Vector2 center = getBoundingBoxCenter();
-            movementEvent = new MovementEvent(this);
-            movementEvent.setRotation(new Rotation(getAngle(), center.x, center.y));
-        }
-
-        if (velocity.x != 0.0 || velocity.y != 0.0) {
-            translate(velocity.x, velocity.y);
-            if (movementEvent == null) {
-                movementEvent = new MovementEvent(this);
+        synchronized (commandQueue) {
+            while(!commandQueue.isEmpty()) {
+                Command command = commandQueue.poll();
+                command.apply(this);
             }
-            movementEvent.setTranslation(getBody().getTransform().getTranslation());
         }
+
+        applyTurn(angularVelocity);
+        applyVelocity();
 
         if (movementEvent != null) {
             final MovementEvent finalizedMovementEvent = movementEvent;
             movementEventListeners.forEach(listener -> listener.onMovementEvent(finalizedMovementEvent));
+        }
+    }
+
+    public void applyTurn(final double angularRotation) {
+        if (angularRotation != 0.0) {
+            rotate(angularRotation);
+            Vector2 center = getBoundingBoxCenter();
+            MovementEvent movementEvent = getOrCreateMovementEvent();
+            movementEvent.setRotation(new Rotation(getAngle(), center.x, center.y));
+        }
+    }
+
+    public void applyThrust(final double magnitude) {
+        // thrust is always a vector adjustment based on current direction
+        final double angleInRadians = getAngle();
+        final double ax = magnitude * Math.cos(angleInRadians);
+        final double ay = magnitude * Math.sin(angleInRadians);
+        velocity.x += ax;
+        velocity.y += ay;
+    }
+
+    public void applyVelocity() {
+        if (velocity.x != 0.0 || velocity.y != 0.0) {
+            translate(velocity.x, velocity.y);
+            MovementEvent movementEvent = getOrCreateMovementEvent();
+            movementEvent.setTranslation(getBody().getTransform().getTranslation());
         }
     }
 
@@ -148,5 +182,13 @@ abstract public class MovingAtom extends BasicAtom {
      */
     public void removeMovementListener(final MovementEventListener listener) {
         movementEventListeners.remove(listener);
+    }
+
+    /**
+     * Adds a command to the queue.
+     * @param command the command to add.
+     */
+    public void queue(Command command) {
+        commandQueue.add(command);
     }
 }

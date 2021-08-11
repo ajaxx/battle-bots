@@ -6,10 +6,19 @@
     fill-opacity: 0.5;
 }
 
+#canvas-div {
+    width: 1000px;
+    height: 500px;
+}
+
 #toolbar {
     list-style: none;
     border: 1px solid black;
     padding: 1rem;
+}
+
+#toolbar li {
+    display: inline;
 }
 
 #atoms .\.Mine {

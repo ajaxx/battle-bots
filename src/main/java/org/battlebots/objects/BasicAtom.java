@@ -1,12 +1,16 @@
 package org.battlebots.objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.battlebots.util.BodySerializer;
+import org.battlebots.util.Rectangle2DSerializer;
+import org.battlebots.util.Vector2Serializer;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.geometry.*;
 
+import java.awt.geom.Rectangle2D;
 import java.util.UUID;
 
 public class BasicAtom implements Atom {
@@ -17,13 +21,9 @@ public class BasicAtom implements Atom {
     private Body body;
 
     @JsonIgnore
-    private double bboxX1;
+    private Vector2 center;
     @JsonIgnore
-    private double bboxX2;
-    @JsonIgnore
-    private double bboxY1;
-    @JsonIgnore
-    private double bboxY2;
+    private Rectangle2D bbox;
 
     /**
      * Constructor
@@ -32,6 +32,7 @@ public class BasicAtom implements Atom {
     public BasicAtom(final Body body) {
         this.id = UUID.randomUUID().toString();
         this.body = body;
+        this.body.setMass(createStandardMass());
         this.detectBoundingBox();
     }
 
@@ -44,10 +45,16 @@ public class BasicAtom implements Atom {
         this.id = UUID.randomUUID().toString();
         this.body = new Body();
         this.body.addFixture(convexShape);
+        this.body.setMass(createStandardMass());
         this.detectBoundingBox();
     }
 
     private void detectBoundingBox() {
+        double bboxX1 = 0.0;
+        double bboxX2 = 0.0;
+        double bboxY1 = 0.0;
+        double bboxY2 = 0.0;
+
         for (BodyFixture fixture : body.getFixtures()) {
             Transform transform = new Transform();
             Convex shape = fixture.getShape();
@@ -70,6 +77,9 @@ public class BasicAtom implements Atom {
                 bboxY2 = miny2.y;
             }
         }
+
+        this.bbox = new Rectangle2D.Double(bboxX1, bboxY1, bboxX2 - bboxX1, bboxY2 - bboxY1);
+        this.center = new Vector2((bboxX1 + bboxX2) / 2, (bboxY1 + bboxY2) / 2);
     }
 
     /**
@@ -110,8 +120,21 @@ public class BasicAtom implements Atom {
         return this;
     }
 
-    @JsonIgnore
+    @JsonProperty("bbox")
+    @JsonSerialize(using = Rectangle2DSerializer.class)
+    public Rectangle2D getBoundingBox() {
+        return bbox;
+    }
+
+    @JsonProperty("center")
+    @JsonSerialize(using = Vector2Serializer.class)
     public Vector2 getBoundingBoxCenter() {
-        return new Vector2((bboxX1 + bboxX2)/2, (bboxY1 + bboxY2) / 2);
+        return center;
+    }
+
+    private static Mass createStandardMass() {
+        Mass mass = new Mass();
+        mass.setType(MassType.NORMAL);
+        return mass;
     }
 }

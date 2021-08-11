@@ -20,7 +20,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer  {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/arena.movement");
+        config.enableSimpleBroker("/arena.movement", "/arena.atom");
         config.setApplicationDestinationPrefixes("/app");
     }
 

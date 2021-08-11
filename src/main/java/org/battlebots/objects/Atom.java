@@ -1,11 +1,24 @@
 package org.battlebots.objects;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.battlebots.commands.Command;
 import org.battlebots.listeners.MovementEventListener;
 import org.dyn4j.dynamics.Body;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY, property = "type")
 public interface Atom {
+    /**
+     * Returns the identifier for the atom.
+     * @return the identifier for the atom.
+     */
+    String getId();
+
+    /**
+     * Returns the body for the atom.
+     * @return the body for the atom.
+     */
+    Body getBody();
+
     /**
      * Occurs when the atom collides with another atom.
      * @param atom the other atom.
@@ -34,15 +47,15 @@ public interface Atom {
     default void removeMovementListener(final MovementEventListener listener) {
     }
 
-    /**
-     * Returns the identifier for the atom.
-     * @return the identifier for the atom.
-     */
-    String getId();
+    default void applyTurn(final double angularRotation) {
+    }
 
-    /**
-     * Returns the body for the atom.
-     * @return the body for the atom.
-     */
-    Body getBody();
+    default void applyThrust(final double magnitude) {
+    }
+
+    default void applyVelocity() {
+    }
+
+    default void queue(Command command) {
+    }
 }
